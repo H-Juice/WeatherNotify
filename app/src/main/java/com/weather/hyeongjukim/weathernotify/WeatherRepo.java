@@ -73,7 +73,7 @@ public class WeatherRepo {
     public weather getWeather() {return weather;}
 
     public interface WeatherApiInterface {
-        @Headers({"Accept: application/json"})
+        @Headers({"Accept: application/json", "appKey:bbb8aa59-2ba0-3fdd-bfb1-07b7f3118ec5"})
         @GET("weather/current/hourly")
         Call<WeatherRepo> get_Weather_retrofit(@Query("version") int version, @Query("lat") String lat, @Query("lon") String lon);
     }
