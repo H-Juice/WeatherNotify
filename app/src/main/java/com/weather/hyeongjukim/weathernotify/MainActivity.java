@@ -3,7 +3,6 @@ package com.weather.hyeongjukim.weathernotify;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -35,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     TextView tem;
     @Bind(R.id.getWeatherBtn)
     Button getWeatherBtn;
+    @Bind(R.id.dust)
+    TextView dust;
 
     private BeaconManager beaconManager;
     private Region region;
@@ -69,13 +70,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
     @OnClick(R.id.getWeatherBtn)
     public void setGetWeatherBtn(View view){
 
-        Retrofit client = new Retrofit.Builder().baseUrl("http://apis.skplanetx.com/")
-                .addConverterFactory(GsonConverterFactory.create()).build();
-        final WeatherRepo.WeatherApiInterface weatherApi =
-                client.create(WeatherRepo.WeatherApiInterface.class);
+        Retrofit client = new Retrofit.Builder().baseUrl("http://apis.skplanetx.com/").addConverterFactory(GsonConverterFactory.create()).build();
+        final WeatherRepo.WeatherApiInterface weatherApi = client.create(WeatherRepo.WeatherApiInterface.class);
         String lat = String.valueOf(35.891734);
         String lon = String.valueOf(128.6106913);
         Call<WeatherRepo> call = weatherApi.get_Weather_retrofit(1, lat, lon);
@@ -95,7 +95,32 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Error", "onFailure" + t);
             }
         });
+        getDustValu(lat,lon);
     }
+
+    void getDustValu(String lat, String lon){
+        Retrofit client = new Retrofit.Builder().baseUrl("http://apis.skplanetx.com/").addConverterFactory(GsonConverterFactory.create()).build();
+        final DustRepo.DustApiInterface dustApi = client.create(DustRepo.DustApiInterface.class);
+        Call<DustRepo> callD = dustApi.get_Dust_retrofit(1, lat, lon);
+            callD.enqueue(new Callback<DustRepo>(){
+
+            @Override
+            public void onResponse(Call<DustRepo> call, Response<DustRepo> response) {
+                DustRepo dustRepo = response.body();
+                if(dustRepo.getResult().getCode().equals("9200")){
+                    dust.setText(dustRepo.getWeather().getDust().get(0).getPm10().getValue());
+                }else {
+                    Log.d("Error", "server return error code :" + dustRepo.getResult().getCode());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DustRepo> call, Throwable t) {
+
+            }
+        });
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                     if(nearestBeacon.getRssi() > -70){
                         beaconManager.stopRanging(region);
                         AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-                        dialog.setTitle("현관문 도착")
+                        dialog.setTitle("현관문 도착"+nearestBeacon.getRssi())
                                 .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
